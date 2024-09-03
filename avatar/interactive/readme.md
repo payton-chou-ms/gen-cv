@@ -11,7 +11,7 @@ This solution accelerator can be used to deploy an application that offers an in
 2. Create the following Azure resources:
 
     - Azure OpenAI Service with these models deployed
-      -  gpt-35-turbo (note: **version 0613 or higher is required**)
+      -  gpt-35-turbo (note: **version 0613 or higher is required**) a
       - text-embedding-ada-002 (version 2)
    - Azure AI Search with default settings
    - Azure SQL with the following settings
