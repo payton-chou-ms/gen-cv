@@ -197,8 +197,8 @@ This solution accelerator can be used to deploy an application that offers an in
     ![image](https://github.com/user-attachments/assets/8bfdfc69-b134-49fd-aa41-6cdb59fe2175)
 
 4. In the VSCode Static Web Apps extension, right-click on your app name and select **Browse site** to use the app.
-   </br> 在 VSCode Static Web Apps 擴展中，右鍵按兩下應用名稱，然後選擇「瀏覽網站」以使用此應用。
-   <img src="./img/17-browse-site.png" alt="drawing" style="width:600px;"/>
+   </br> 在 VSCode Static Web Apps 擴展中，右鍵按下應用名稱，然後選擇「瀏覽網站」以使用此應用。
+   <img src="./img/10-browse-site.png" alt="drawing" style="width:600px;"/>
    
 ## Notes on Running the Solution Locally 在本地運行解決方案的注意事項
 - ODBC Driver 17 for SQL Server is required to run the solution locally. You can install it via this [link](https://learn.microsoft.com/zh-tw/sql/connect/odbc/download-odbc-driver-for-sql-server?view=sql-server-ver16#version-17).
@@ -207,7 +207,7 @@ This solution accelerator can be used to deploy an application that offers an in
   </br> 此解決方案已使用 Node 版本 18.0.0 進行了測試。
 - To run the solution locally, please follow the instructions below:
   </br> 請依照下列步驟在本地運行此解決方案：
-  - We use Use the Static Web Apps CLI to run the solution. You can install it via npm. Details can be found [here](https://azure.github.io/static-web-apps-cli/docs/use/install/).
+  - We use the Static Web Apps CLI to run the solution. You can install it via npm. Details can be found [here](https://azure.github.io/static-web-apps-cli/docs/use/install/).
     </br> 我們使用 Static Web Apps CLI 來運行此解決方案。您可以透過 npm 安裝它，詳細說明可參照此連結。
       ```
       npm install -g @azure/static-web-apps-cli
