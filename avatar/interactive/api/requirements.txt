@@ -7,3 +7,4 @@ requests
 pyodbc
 azure-identity
 azure-storage-blob
+azure-ai-textanalytics
