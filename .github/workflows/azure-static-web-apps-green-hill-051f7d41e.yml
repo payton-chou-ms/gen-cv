@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD - green-hill
+name: Azure Static Web Apps CI/CD - green-hill - gov
 
 on:
   push:
