@@ -18,15 +18,15 @@ AOAI_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 embeddings_deployment = os.getenv("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT")
 chat_deployment = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
 
-sql_db_server = os.getenv("SQL_DB_SERVER")
-sql_db_user = os.getenv("SQL_DB_USER")
-sql_db_password = os.getenv("SQL_DB_PASSWORD")
-sql_db_name = os.getenv("SQL_DB_NAME")
+# sql_db_server = os.getenv("SQL_DB_SERVER")
+# sql_db_user = os.getenv("SQL_DB_USER")
+# sql_db_password = os.getenv("SQL_DB_PASSWORD")
+# sql_db_name = os.getenv("SQL_DB_NAME")
 
 blob_sas_url = os.getenv("BLOB_SAS_URL")
 
-server_connection_string = f"Driver={{ODBC Driver 17 for SQL Server}};Server=tcp:{sql_db_server},1433;Uid={sql_db_user};Pwd={sql_db_password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
-database_connection_string = server_connection_string + f"Database={sql_db_name};"
+# server_connection_string = f"Driver={{ODBC Driver 17 for SQL Server}};Server=tcp:{sql_db_server},1433;Uid={sql_db_user};Pwd={sql_db_password};Encrypt=yes;TrustServerCertificate=no;Connection Timeout=30;"
+# database_connection_string = server_connection_string + f"Database={sql_db_name};"
 
 # font color adjustments
 blue, end_blue = '\033[36m', '\033[0m'
@@ -127,14 +127,54 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
 def display_product_info(product_info, display_size=40):
     """ Display product information """
+    from azure.identity import DefaultAzureCredential
+    from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
+    from datetime import datetime, timedelta
+    import requests
 
-    # Show image
+    # 設置你的 Azure Blob Storage 資訊
+    account_url = "https://aoaipaytonstr.blob.core.windows.net"
+    container_name = "gov-images"
+
+    # 使用 DefaultAzureCredential 進行身份驗證
+    credential = DefaultAzureCredential()
+    blob_service_client = BlobServiceClient(account_url=account_url, credential=credential)
+
     image_file = product_info['product_image_file']
 
-    image_url = blob_sas_url.split("?")[0] + f"/{image_file}?" + blob_sas_url.split("?")[1]
+    # 生成圖像 URL
+    blob_client = blob_service_client.get_blob_client(container=container_name, blob=image_file)
+    
+    # 獲取用戶委派密鑰
+    user_delegation_key = blob_service_client.get_user_delegation_key(
+        key_start_time=datetime.utcnow(),
+        key_expiry_time=datetime.utcnow() + timedelta(hours=1)
+    )
+
+    # 生成具有讀取權限的 SAS URL
+    sas_token = generate_blob_sas(
+        account_name=blob_service_client.account_name,
+        container_name=container_name,
+        blob_name=image_file,
+        user_delegation_key=user_delegation_key,
+        permission=BlobSasPermissions(read=True),
+        expiry=datetime.utcnow() + timedelta(hours=1)  # 設置過期時間
+    )
+
+    image_url = f"{blob_client.url}?{sas_token}"
+
+    # image_url = blob_client.url
 
     response = requests.get(image_url)
-    print(image_url)
+    print("image_url: ", image_url)
+
+    # Show image
+    # image_file = product_info['product_image_file']
+
+    # image_url = blob_sas_url.split("?")[0] + f"/{image_file}?" + blob_sas_url.split("?")[1]
+
+    # response = requests.get(image_url)
+    # print(image_url)
 
     # Check if the request was successful
     if response.status_code == 200:

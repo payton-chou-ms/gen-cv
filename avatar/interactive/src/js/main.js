@@ -214,6 +214,7 @@ async function greeting() {
   addToConversationHistory("你好，我是 Lisa。請問有什麼需要協助的？", "light")
 
   let spokenText = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='zh-TW'><voice xml:lang='zh-TW' xml:gender='Female' name='zh-CN-XiaochenMultilingualNeural'>你好，我是 Lisa。請問有什麼需要協助的？</voice></speak>"
+  console.log("Spoken text: " + spokenText)
   avatarSynthesizer.speakSsmlAsync(spokenText, (result) => {
     if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
       console.log("Speech synthesized to speaker for text [ " + spokenText + " ]. Result ID: " + result.resultId)
@@ -249,6 +250,8 @@ window.speak = (text) => {
           spokenTextssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Female' name='ar-AE-FatimaNeural'><lang xml:lang="${language}">${generatedResult}</lang></voice></speak>`
         }
         let spokenText = generatedResult
+        console.log("Spoken text: " + spokenTextssml)
+        // console.log(spokenTextssml)
         avatarSynthesizer.speakSsmlAsync(spokenTextssml, (result) => {
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Speech synthesized to speaker for text [ " + spokenText + " ]. Result ID: " + result.resultId)
@@ -342,10 +345,6 @@ function addProductToChatHistory(product) {
     <fluent-card class="product-card">
       <div class="product-card__header">
         <img src="${product.image_url}" alt="tent" width="100%">
-      </div>
-      <div class="product-card__content">
-        <div><span class="product-card__price">$${product.special_offer}</span> <span class="product-card__old-price">$${product.original_price}</span></div>
-        <div>${product.tagline}</div>
       </div>
     </fluent-card>
   `;
