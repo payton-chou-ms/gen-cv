@@ -3,11 +3,12 @@ name: Azure Static Web Apps CI/CD - green-hill - gov
 on:
   push:
     branches:
-      - main
+      - gov
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - main
+      - gov
+  workflow_dispatch:  # 添加這一行來允許手動觸發
 
 jobs:
   build_and_deploy_job:
