@@ -341,13 +341,19 @@ function addProductToChatHistory(product) {
   const list = document.getElementById('chathistory');
   const listItem = document.createElement('li');
   listItem.classList.add('product');
-  listItem.innerHTML = `
-    <fluent-card class="product-card">
-      <div class="product-card__header">
-        <img src="${product.image_url}" alt="tent" width="100%">
-      </div>
-    </fluent-card>
-  `;
+
+  if (USE_APP_REGISTRATION === "true") {
+    listItem.innerHTML = ``;
+  } else {
+    listItem.innerHTML = `
+      <fluent-card class="product-card">
+        <div class="product-card__header">
+          <img src="${product.image_url}" alt="tent" width="100%">
+        </div>
+      </fluent-card>
+    `;
+  }
+
   list.appendChild(listItem);
 }
 

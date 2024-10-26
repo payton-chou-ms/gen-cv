@@ -17,7 +17,7 @@ AOAI_key = os.getenv("AZURE_OPENAI_API_KEY")
 AOAI_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 embeddings_deployment = os.getenv("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT")
 chat_deployment = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
-
+use_app_registration = os.getenv("USE_APP_REGISTRATION")
 # sql_db_server = os.getenv("SQL_DB_SERVER")
 # sql_db_user = os.getenv("SQL_DB_USER")
 # sql_db_password = os.getenv("SQL_DB_PASSWORD")
@@ -92,9 +92,18 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             product_info = json.loads(function_response)
             # show product information after search for a different product that the current one
             # if product_info['product_image_file'] != current_product_image:
-                
-            products = [display_product_info(product_info)]
-            current_product_image = product_info['product_image_file']
+
+            # Note: APP can't issue token for blob storage in my tenant, so we need to remove the image_url from the response
+            if use_app_registration == "true":
+                products = {
+                    "content": product_info['content'],
+                    "image_url": "", 
+                }
+            else:
+                products = [display_product_info(product_info)]
+            
+
+            # current_product_image = product_info['product_image_file']
             
             # return only product description to LLM to avoid chatting about prices and image files 
             # function_response = product_info['description']
