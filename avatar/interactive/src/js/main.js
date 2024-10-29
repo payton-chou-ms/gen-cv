@@ -1,30 +1,17 @@
 // Copyright (c) Microsoft. All rights reserved.
 // Licensed under the MIT license.
 
-// var system_prompt = `You are an AI assistant focused on delivering brief product details and assisting with the ordering process.
-// - Before calling a function, aim to answer product queries using existing conversational context.
-// - If the product information isn't clear or available, consult get_product_information for accurate details. Never invent answers.  
-// - Address customer account or order-related queries with the appropriate functions.
-// - Before seeking account specifics (like account_id), scan previous parts of the conversation. Reuse information if available, avoiding repetitive queries.
-// - NEVER GUESS FUNCTION INPUTS! If a user's request is unclear, request further clarification. 
-// - Provide responses within 3 sentences, emphasizing conciseness and accuracy.
-// - If not specified otherwise, the account_id of the current user is 1000
-// - Pay attention to the language the customer is using in their latest statement and respond in the same language!
-// `
-var system_prompt = `You are an AI assistant focused on delivering brief product details.
-- Before calling a function, aim to answer product queries using existing conversational context.
-- If the product information isn't clear or available, consult get_product_information for accurate details. Never invent answers.  
-- Address customer account or order-related queries with the appropriate functions.
-- Before seeking account specifics (like account_id), scan previous parts of the conversation. Reuse information if available, avoiding repetitive queries.
-- NEVER GUESS FUNCTION INPUTS! If a user's request is unclear, request further clarification. 
-- Provide responses within 3 sentences, emphasizing conciseness and accuracy.
-- Pay attention to the language the customer is using in their latest statement and respond in the same language!
-`
-// const TTSVoice = "en-US-JennyMultilingualNeural" // Update this value if you want to use a different voice
+var system_prompt = `您是一個專注於提供展覽會場資訊的 AI 助手。
+- 在調用函數之前，請根據現有的對話上下文回答查詢。
+- 如果信息不明確或不可用，請查詢 get_product_information 以獲取準確的資訊。絕對不要編造答案。
+- 在三句話內提供回應，強調簡潔和準確。
+- 注意客戶在最新陳述中使用的語言，並使用相同的語言回應！`
+
+// Update this value if you want to use a different voice
 const TTSVoice = "zh-CN-XiaochenMultilingualNeural"
 
-// //const CogSvcRegion = "westeurope" // Fill your Azure cognitive services region here, e.g. westus2
-const CogSvcRegion = "westus2" // Fill your Azure cognitive services region here, e.g. westus2
+// Fill your Azure cognitive services region here, e.g. westus2
+const CogSvcRegion = "westus2"
 
 const IceServerUrl = "turn:relay.communication.microsoft.com:3478" // Fill your ICE server URL here, e.g. turn:turn.azure.com:3478
 let IceServerUsername
@@ -33,8 +20,8 @@ let IceServerCredential
 // const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarStyle = "casual-sitting"
-
-supported_languages = ["en-US", "zh-TW"] // The language detection engine supports a maximum of 4 languages
+// The language detection engine supports a maximum of 4 languages
+supported_languages = ["en-US", "zh-TW"]
 
 let token
 
@@ -222,7 +209,6 @@ async function greeting() {
   addToConversationHistory("你好，我是 Lisa。請問有什麼需要協助的？", "light")
 
   let spokenText = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='zh-TW'><voice xml:lang='zh-TW' xml:gender='Female' name='zh-CN-XiaochenMultilingualNeural'>你好，我是 Lisa。請問有什麼需要協助的？</voice></speak>"
-  console.log("Spoken text: " + spokenText)
   avatarSynthesizer.speakSsmlAsync(spokenText, (result) => {
     if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
       console.log("Speech synthesized to speaker for text [ " + spokenText + " ]. Result ID: " + result.resultId)
@@ -258,8 +244,6 @@ window.speak = (text) => {
           spokenTextssml = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'><voice xml:lang='en-US' xml:gender='Female' name='ar-AE-FatimaNeural'><lang xml:lang="${language}">${generatedResult}</lang></voice></speak>`
         }
         let spokenText = generatedResult
-        console.log("Spoken text: " + spokenTextssml)
-        // console.log(spokenTextssml)
         avatarSynthesizer.speakSsmlAsync(spokenTextssml, (result) => {
           if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
             console.log("Speech synthesized to speaker for text [ " + spokenText + " ]. Result ID: " + result.resultId)
@@ -349,32 +333,13 @@ function addProductToChatHistory(product) {
   const list = document.getElementById('chathistory');
   const listItem = document.createElement('li');
   listItem.classList.add('product');
-
-  // TODO: Add api/config to fetch environment variables
-  // if (use_app_registration === "true") {
-  //   listItem.innerHTML = ``;
-  // } else {
-  //   listItem.innerHTML = `
-  //     <fluent-card class="product-card">
-  //       <div class="product-card__header">
-  //         <img src="${product.image_url}" alt="tent" width="100%">
-  //       </div>
-  //     </fluent-card>s
-  //   `;
-  // }
-
-  // Use app_registration
-  // listItem.innerHTML = ``
-  
-  // No use app_registration
   listItem.innerHTML = `
-  <fluent-card class="product-card">
-    <div class="product-card__header">
-      <img src="${product.image_url}" alt="tent" width="100%">
-    </div>
-  </fluent-card>
+    <fluent-card class="product-card">
+      <div class="product-card__header">
+        <img src="${product.image_url}" alt="tent" width="100%">
+      </div>
+    </fluent-card>
   `;
-
   list.appendChild(listItem);
 }
 

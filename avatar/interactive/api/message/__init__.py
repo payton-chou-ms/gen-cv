@@ -17,7 +17,7 @@ AOAI_key = os.getenv("AZURE_OPENAI_API_KEY")
 AOAI_api_version = os.getenv("AZURE_OPENAI_API_VERSION")
 embeddings_deployment = os.getenv("AZURE_OPENAI_EMBEDDINGS_DEPLOYMENT")
 chat_deployment = os.getenv("AZURE_OPENAI_CHAT_DEPLOYMENT")
-use_app_registration = os.getenv("USE_APP_REGISTRATION")
+#use_app_registration = os.getenv("USE_APP_REGISTRATION")
 # sql_db_server = os.getenv("SQL_DB_SERVER")
 # sql_db_user = os.getenv("SQL_DB_USER")
 # sql_db_password = os.getenv("SQL_DB_PASSWORD")
@@ -33,19 +33,36 @@ blue, end_blue = '\033[36m', '\033[0m'
 
 place_orders = False
 
+# functions = [
+#         {
+#         "name": "get_product_information",
+#         "description": "Find information about a product based on a user question. Use only if the requested information if not already available in the conversation context.",
+#         "parameters": {
+#             "type": "object",
+#             "properties": {
+#                 "user_question": {
+#                     "type": "string",
+#                     "description": "User question (i.e., do you have tennis shoes for men?, etc.)"
+#                 },
+#             },
+#             "required": ["user_question"],
+#         }
+#     }
+# ]
+
 functions = [
-        {
+    {
         "name": "get_product_information",
-        "description": "Find information about a product based on a user question. Use only if the requested information if not already available in the conversation context.",
+        "description": "根據用戶問題查找展覽相關資訊。僅在對話上下文中沒有請求的信息時使用。",
         "parameters": {
             "type": "object",
             "properties": {
                 "user_question": {
                     "type": "string",
-                    "description": "User question (i.e., do you have tennis shoes for men?, etc.)"
+                    "description": "用戶問題（例如，這裡有哪個部門的展覽？等）"
                 },
             },
-            "required": ["user_question"],
+            "required": ["user_question"]
         }
     }
 ]
@@ -90,33 +107,14 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
 
         if function_to_call == get_product_information:
             product_info = json.loads(function_response)
-            # show product information after search for a different product that the current one
-            # if product_info['product_image_file'] != current_product_image:
-
-            # Note: APP can't issue token for blob storage in my tenant, so we need to remove the image_url from the response
-            if use_app_registration == "true":
-                products = {
-                    "content": product_info['content'],
-                    "image_url": "", 
-                }
-            else:
-                products = [display_product_info(product_info)]
-            
-
-            # current_product_image = product_info['product_image_file']
-            
-            # return only product description to LLM to avoid chatting about prices and image files 
-            # function_response = product_info['description']
+            products = [display_product_info(product_info)]
             function_response = product_info['content']
-
         messages.append({
             "role": "function",
             "name": function_name,
             "content": function_response,
         })
-     
         response = chat_complete(messages, functions= functions, function_call= "none")
-        
         response_message = response["choices"][0]["message"]
 
     messages.append({'role' : response_message['role'], 'content' : response_message['content']})
@@ -133,68 +131,16 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         status_code=200
     )
 
-
 def display_product_info(product_info, display_size=40):
-    """ Display product information """
-    from azure.identity import DefaultAzureCredential
-    from azure.storage.blob import BlobServiceClient, generate_blob_sas, BlobSasPermissions
-    from datetime import datetime, timedelta
-    import requests
-
-    # 設置你的 Azure Blob Storage 資訊
-    account_url = "https://aoaipaytonstr.blob.core.windows.net"
-    container_name = "gov-images"
-
-    # 使用 DefaultAzureCredential 進行身份驗證
-    credential = DefaultAzureCredential()
-    blob_service_client = BlobServiceClient(account_url=account_url, credential=credential)
-
     image_file = product_info['product_image_file']
 
-    # 生成圖像 URL
-    blob_client = blob_service_client.get_blob_client(container=container_name, blob=image_file)
-    
-    # 獲取用戶委派密鑰
-    user_delegation_key = blob_service_client.get_user_delegation_key(
-        key_start_time=datetime.utcnow(),
-        key_expiry_time=datetime.utcnow() + timedelta(hours=1)
-    )
-
-    # 生成具有讀取權限的 SAS URL
-    sas_token = generate_blob_sas(
-        account_name=blob_service_client.account_name,
-        container_name=container_name,
-        blob_name=image_file,
-        user_delegation_key=user_delegation_key,
-        permission=BlobSasPermissions(read=True),
-        expiry=datetime.utcnow() + timedelta(hours=1)  # 設置過期時間
-    )
-
-    image_url = f"{blob_client.url}?{sas_token}"
-
-    # image_url = blob_client.url
-
-    response = requests.get(image_url)
+    # Use public blob storage URL to display image
+    image_url = "https://paytonavatardemo.blob.core.windows.net/avatar-image/" + image_file
     print("image_url: ", image_url)
-
-    # Show image
-    # image_file = product_info['product_image_file']
-
-    # image_url = blob_sas_url.split("?")[0] + f"/{image_file}?" + blob_sas_url.split("?")[1]
-
-    # response = requests.get(image_url)
-    # print(image_url)
-
-    # Check if the request was successful
-    if response.status_code == 200:
-        return {
-            "content": product_info['content'],
-            "image_url": image_url 
-            }
-    else:
-        print(f"Failed to retrieve image. HTTP Status code: {response.status_code}")
-    print(f"""{product_info['content']}""")
-
+    return {
+        "content": product_info['content'],
+        "image_url": image_url 
+    }
 def generate_embeddings(text):
     """ Generate embeddings for an input string using embeddings API """
 
@@ -212,7 +158,7 @@ def generate_embeddings(text):
 
 def get_product_information(user_question, categories='*', top_k=1):
     """ Vectorize user query to search Cognitive Search vector search on index_name. Optional filter on categories field. """
-     
+    
     url = f"{search_endpoint}/indexes/{search_index_name}/docs/search?api-version={search_api_version}"
 
     headers = {
