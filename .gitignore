@@ -175,3 +175,4 @@ sam*.pth
 **/*.amlignore*
 **/*.ipynb_aml_checkpoints*
 **/*amltmp
+avatar/interactive/api/.local.settings-backup.json
