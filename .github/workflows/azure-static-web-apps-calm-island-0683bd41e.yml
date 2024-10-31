@@ -1,4 +1,4 @@
-name: Azure Static Web Apps CI/CD - calm island
+name: Azure Static Web Apps - main - calm island
 
 on:
   push:
