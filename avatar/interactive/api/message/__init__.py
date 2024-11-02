@@ -304,7 +304,13 @@ def display_product_info(product_info, display_size=40):
     # Show image
     image_file = product_info['product_image_file']
 
-    image_url = blob_sas_url.split("?")[0] + f"/{image_file}?" + blob_sas_url.split("?")[1]
+    # Because MS non-production environment does not allow issue SAS token for private blob storage,
+    # we use public blob storage URL to display image
+    # Use public blob storage URL to display image
+    image_url = (
+        "https://paytonavatarimage.blob.core.windows.net/product-images/" + image_file
+    )
+    # image_url = blob_sas_url.split("?")[0] + f"/{image_file}?" + blob_sas_url.split("?")[1]
 
     response = requests.get(image_url)
     print(image_url)
