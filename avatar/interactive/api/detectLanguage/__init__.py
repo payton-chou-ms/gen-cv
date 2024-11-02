@@ -1,53 +1,47 @@
 import logging
-import requests
-import json
 import os
-
+from azure.ai.textanalytics import TextAnalyticsClient
+from azure.core.credentials import AzureKeyCredential
 import azure.functions as func
 
 endpoint = os.getenv("TEXT_ANALYTICS_ENDPOINT")
 subscription_key = os.getenv("TEXT_ANALYTICS_KEY")
 
+def authenticate_client():
+    ta_credential = AzureKeyCredential(subscription_key)
+    text_analytics_client = TextAnalyticsClient(
+        endpoint=endpoint, credential=ta_credential)
+    return text_analytics_client
+
 def main(req: func.HttpRequest) -> func.HttpResponse:
-    apiUrl = f'{endpoint}/text/analytics/v3.2-preview.1/languages'
     text = req.params.get('text')
+    if not text:
+        return func.HttpResponse(
+            "Please pass a text on the query string",
+            status_code=400
+        )
 
-    requestBody = {
-        'documents': [
-        {
-            'id': '1',
-            'text': text
+    client = authenticate_client()
+
+    try:
+        response = client.detect_language(documents=[{"id": "1", "text": text}])
+        language_code = response[0].primary_language.iso6391_name
+
+        language_to_voice = {
+            "de": "de-DE",
+            "en": "en-US",
+            "es": "es-ES",
+            "fr": "fr-FR",
+            "it": "it-IT",
+            "ja": "ja-JP",
+            "ko": "ko-KR",
+            "pt": "pt-BR",
+            "zh_chs": "zh-CN",
+            "zh_cht": "zh-CN",
+            "ar": "ar-AE"
         }
-        ]
-    }
 
-    requestOptions = {
-        'headers': {
-        'Content-Type': 'application/json',
-        'Ocp-Apim-Subscription-Key': subscription_key
-        },
-        'data': json.dumps(requestBody)
-    }
-
-    response = requests.post(apiUrl, **requestOptions)
-    data = response.json()
-    language_code = data['documents'][0]['detectedLanguage']['iso6391Name']
-
-    language_to_voice = {
-        "de": "de-DE",
-        "en": "en-US",
-        "es": "es-ES",
-        "fr": "fr-FR",
-        "it": "it-IT",
-        "ja": "ja-JP",
-        "ko": "ko-KR",
-        "pt": "pt-BR",
-        "zh_chs": "zh-CN",
-        "zh_cht": "zh-CN",
-        "ar": "ar-AE"
-    }
-
-    if response.status_code == 200:
-        return func.HttpResponse(language_to_voice[language_code], status_code=200)
-    else:
-        return func.HttpResponse(response.status_code)
+        return func.HttpResponse(language_to_voice.get(language_code, "en-US"), status_code=200)
+    except Exception as e:
+        logging.error(f"Error detecting language: {e}")
+        return func.HttpResponse("Error detecting language", status_code=500)
