@@ -24,7 +24,7 @@ place_orders = False
 
 functions = [
     {
-        "name": "get_product_information",
+        "name": "get_information",
         "description": "根據用戶問題查找展覽相關資訊。僅在對話上下文中沒有請求的信息時使用。",
         "parameters": {
             "type": "object",
@@ -60,7 +60,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         function_name = response_message["function_call"]["name"]
 
         available_functions = {
-            "get_product_information": get_product_information,
+            "get_information": get_information,
         }
         function_to_call = available_functions[function_name]
 
@@ -80,7 +80,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             }
         )
 
-        if function_to_call == get_product_information:
+        if function_to_call == get_information:
             product_info = json.loads(function_response)
             products = [display_product_info(product_info)]
             function_response = product_info["content"]
@@ -110,7 +110,7 @@ def display_product_info(product_info, display_size=40):
 
     # Use public blob storage URL to display image
     image_url = (
-        "https://paytonavatardemo.blob.core.windows.net/avatar-image/" + image_file
+        "https://paytonavatarimage.blob.core.windows.net/gov-images/" + image_file
     )
     print("image_url: ", image_url)
     return {"content": product_info["content"], "image_url": image_url}
@@ -132,7 +132,7 @@ def generate_embeddings(text):
     return response["data"][0]["embedding"]
 
 
-def get_product_information(user_question, categories="*", top_k=1):
+def get_information(user_question, categories="*", top_k=1):
     """Vectorize user query to search Cognitive Search vector search on index_name. Optional filter on categories field."""
 
     url = f"{search_endpoint}/indexes/{search_index_name}/docs/search?api-version={search_api_version}"
