@@ -9,8 +9,8 @@ import azure.functions as func
 
 search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
 search_key = os.getenv("AZURE_SEARCH_API_KEY")
-# search_api_version = "2023-07-01-Preview"
-search_api_version = "2024-07-01"
+search_api_version = "2023-07-01-Preview"
+# search_api_version = "2024-07-01"
 search_index_name = os.getenv("AZURE_SEARCH_INDEX")
 
 AOAI_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -68,6 +68,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         function_args = json.loads(response_message["function_call"]["arguments"])
         function_response = function_to_call(**function_args)
         # print(function_name, function_args)
+
+        # Add the assistant response and function response to the messages
+        messages.append(
+            {
+                "role": "system",
+                "content": "1. 如果內容有中文字的時候, 請在回應的時候, 避免第一個字是英文, 必須要是中文字開頭\n" +
+                           "2. 請在回應的時候, 請使用50個字以內回覆\n"
+            }
+        )
 
         # Add the assistant response and function response to the messages
         messages.append(
