@@ -9,7 +9,8 @@ import azure.functions as func
 
 search_endpoint = os.getenv("AZURE_SEARCH_ENDPOINT")
 search_key = os.getenv("AZURE_SEARCH_API_KEY")
-search_api_version = "2023-07-01-Preview"
+# search_api_version = "2023-07-01-Preview"
+search_api_version = "2024-07-01"
 search_index_name = os.getenv("AZURE_SEARCH_INDEX")
 
 AOAI_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
@@ -31,7 +32,7 @@ functions = [
             "properties": {
                 "user_question": {
                     "type": "string",
-                    "description": "用戶問題（例如，這裡有哪個部門的展覽？等）",
+                    "description": "用戶問題（例如: 請介紹展覽等）",
                 },
             },
             "required": ["user_question"],

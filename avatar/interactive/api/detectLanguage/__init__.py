@@ -41,7 +41,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             "ar": "ar-AE"
         }
 
-        return func.HttpResponse(language_to_voice.get(language_code, "en-US"), status_code=200)
+        return func.HttpResponse(language_to_voice.get(language_code, "zh-CN"), status_code=200)
     except Exception as e:
         logging.error(f"Error detecting language: {e}")
         return func.HttpResponse("Error detecting language", status_code=500)
