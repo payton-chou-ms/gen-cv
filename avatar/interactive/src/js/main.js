@@ -8,7 +8,8 @@ var system_prompt = `您是一個專注於提供展覽會場資訊的 AI 助手�
 - 注意客戶在最新陳述中使用的語言，並使用相同的語言回應！`
 
 // Update this value if you want to use a different voice
-const TTSVoice = "zh-CN-XiaochenMultilingualNeural"
+// const TTSVoice = "zh-CN-XiaochenMultilingualNeural"
+const TTSVoice = "en-US-CoraMultilingualNeural"
 
 // Fill your Azure cognitive services region here, e.g. westus2
 const CogSvcRegion = "westus2"
@@ -17,9 +18,11 @@ const IceServerUrl = "turn:relay.communication.microsoft.com:3478" // Fill your 
 let IceServerUsername
 let IceServerCredential
 
-// const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarCharacter = "lisa"
+// const TalkingAvatarCharacter = "Meg-formal"
+// const TalkingAvatarCharacter = "Lori-graceful"
 const TalkingAvatarStyle = "casual-sitting"
+// const TalkingAvatarStyle = "business"
 // The language detection engine supports a maximum of 4 languages
 supported_languages = ["en-US", "zh-TW"]
 

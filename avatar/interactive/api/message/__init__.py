@@ -120,7 +120,7 @@ def display_product_info(product_info, display_size=40):
 
     # Use public blob storage URL to display image
     image_url = (
-        "https://paytonavatarimage.blob.core.windows.net/aitour-images/" + image_file
+        "https://paytonavatarimage.blob.core.windows.net/liteon-images/" + image_file
     )
     print("image_url: ", image_url)
     return {"content": product_info["content"], "image_url": image_url}

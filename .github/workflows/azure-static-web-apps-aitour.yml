@@ -1,12 +1,12 @@
-name: Azure Static Web Apps CI/CD - aitour
+name: Azure Static Web Apps CI/CD - lite-on
 on:
   push:
     branches:
-      - aitour
+      - lite-on
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - aitour
+      - lite-on
   workflow_dispatch:  # 添加這一行來允許手動觸發
 
 jobs:
