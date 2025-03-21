@@ -3,11 +3,11 @@ name: Azure Static Web Apps - gov - green-hill
 on:
   push:
     branches:
-      - gov
+      - aitour
   pull_request:
     types: [opened, synchronize, reopened, closed]
     branches:
-      - gov
+      - aitour
   workflow_dispatch:
 jobs:
   build_and_deploy_job:
