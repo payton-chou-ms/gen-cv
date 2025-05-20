@@ -12,11 +12,12 @@ var system_prompt = `You are an AI assistant focused on delivering brief product
 - Pay attention to the language the customer is using in their latest statement and respond in the same language!
 `
 
-// const TTSVoice = "en-US-JennyMultilingualNeural" // Update this value if you want to use a different voice
+// Update this value if you want to use a different voice
 const TTSVoice = "zh-CN-XiaochenMultilingualNeural"
+// const TTSVoice = "en-US-CoraMultilingualNeural"
 
-// //const CogSvcRegion = "westeurope" // Fill your Azure cognitive services region here, e.g. westus2
-const CogSvcRegion = "westus2" // Fill your Azure cognitive services region here, e.g. westus2
+// Fill your Azure cognitive services region here, e.g. westus2
+const CogSvcRegion = "westus2"
 
 const IceServerUrl = "turn:relay.communication.microsoft.com:3478" // Fill your ICE server URL here, e.g. turn:turn.azure.com:3478
 let IceServerUsername
@@ -25,8 +26,8 @@ let IceServerCredential
 // const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarStyle = "casual-sitting"
-
-supported_languages = ["en-US", "zh-TW"] // The language detection engine supports a maximum of 4 languages
+// The language detection engine supports a maximum of 4 languages
+supported_languages = ["en-US", "zh-TW"]
 
 let token
 
@@ -37,6 +38,10 @@ var speechSynthesizer
 var avatarSynthesizer
 var peerConnection
 var previousAnimationFrameTimestamp = 0
+var keepAliveInterval = null  // 用於存儲 keepalive 計時器
+var keepAliveIntervalTime = 60000  // keepalive 時間間隔，預設 60 秒
+var maxKeepAliveAttempts = 20  // 最大 keepalive 嘗試次數，預設為 2
+var keepAliveAttemptCount = 0  // 當前已執行的 keepalive 次數
 
 messages = [{ "role": "system", "content": system_prompt }];
 
@@ -183,6 +188,121 @@ function connectToAvatarService() {
     console.log("Event received: " + e.description + offsetMessage)
   }
 
+  // 啟動 keepalive 機制
+  startKeepAlive();
+}
+
+// Keepalive 機制函數
+function startKeepAlive() {
+  // 清除任何現有的 keepalive 定時器
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+  }
+  
+  // 重置 keepalive 計數
+  keepAliveAttemptCount = 0;
+
+  // 創建新的 keepalive 定時器
+  keepAliveInterval = setInterval(() => {
+    if (avatarSynthesizer && peerConnection) {
+      // 檢查 WebRTC 連接狀態
+      if (peerConnection.iceConnectionState === 'connected' || 
+          peerConnection.iceConnectionState === 'completed') {
+        
+        // 檢查是否已達到最大嘗試次數
+        if (keepAliveAttemptCount >= maxKeepAliveAttempts) {
+          console.log("[" + (new Date()).toISOString() + "] Maximum keepalive attempts reached (" + maxKeepAliveAttempts + "), stopping keepalive");
+          clearInterval(keepAliveInterval);
+          keepAliveInterval = null;
+          return;
+        }
+        
+        // 增加計數
+        keepAliveAttemptCount++;
+        
+        console.log("[" + (new Date()).toISOString() + "] Sending keepalive signal (attempt " + keepAliveAttemptCount + " of " + maxKeepAliveAttempts + ")");
+        
+        // 使用靜音 SSML 以保持連接活躍
+        const keepAliveSSML = `<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xmlns:mstts='https://www.w3.org/2001/mstts' xml:lang='en-US'>
+          <voice xml:lang='en-US' xml:gender='Female' name='zh-CN-XiaochenMultilingualNeural'>
+            <mstts:silence type="Tailing" value="5ms"/>
+          </voice>
+        </speak>`;
+        
+        avatarSynthesizer.speakSsmlAsync(keepAliveSSML, (result) => {
+          if (result.reason === SpeechSDK.ResultReason.SynthesizingAudioCompleted) {
+            console.log("[" + (new Date()).toISOString() + "] Keepalive signal sent");
+          } else {
+            console.log("[" + (new Date()).toISOString() + "] Failed to send keepalive");
+            if (result.reason === SpeechSDK.ResultReason.Canceled) {
+              let cancellationDetails = SpeechSDK.CancellationDetails.fromResult(result);
+              console.log("Keepalive canceled: " + cancellationDetails.reason);
+              
+              // 如果連接已斷開，嘗試重新連接
+              if (cancellationDetails.reason === SpeechSDK.CancellationReason.Error) {
+                console.log("Keepalive error: " + cancellationDetails.errorDetails);
+                attemptReconnect();
+              }
+            }
+          }
+        });
+      } else if (peerConnection.iceConnectionState === 'disconnected' || 
+                 peerConnection.iceConnectionState === 'failed' ||
+                 peerConnection.iceConnectionState === 'closed') {
+        console.log("[" + (new Date()).toISOString() + "] Connection lost, attempting to reconnect");
+        attemptReconnect();
+      }
+    }
+  }, keepAliveIntervalTime); // 使用變數設定時間間隔
+}
+
+// 新增: 嘗試重新連接
+function attemptReconnect() {
+  // 停止現有的 keepalive
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  }
+
+  // 關閉現有連接
+  if (speechSynthesizer) {
+    speechSynthesizer.close();
+  }
+
+  if (avatarSynthesizer) {
+    avatarSynthesizer = null;
+  }
+
+  if (peerConnection) {
+    peerConnection.close();
+    peerConnection = null;
+  }
+
+  // 延遲2秒後重新連接
+  setTimeout(() => {
+    console.log("[" + (new Date()).toISOString() + "] Attempting to reconnect");
+
+    // 重新請求 token 並重新啟動服務
+    fetch("/api/getSpeechToken", {
+      method: "POST"
+    })
+      .then(response => response.text())
+      .then(response => {
+        speechSynthesisConfig.authorizationToken = response;
+        token = response;
+
+        speechSynthesizer = new SpeechSDK.SpeechSynthesizer(speechSynthesisConfig, null);
+        connectToAvatarService();
+        setupWebRTC();
+
+        console.log("[" + (new Date()).toISOString() + "] Reconnection setup completed");
+      })
+      .catch(error => {
+        console.error("[" + (new Date()).toISOString() + "] Reconnection failed: ", error);
+        // 稍後再次嘗試重新連接
+        setTimeout(attemptReconnect, 30000);
+      });
+  }, 2000);
 }
 
 window.startSession = () => {
@@ -232,6 +352,9 @@ async function greeting() {
 
 window.speak = (text) => {
   async function speak(text) {
+    // 用戶進行交談，重置 keepalive 計數
+    keepAliveAttemptCount = 0;
+
     addToConversationHistory(text, 'dark')
 
     fetch("/api/detectLanguage?text=" + text, {
@@ -272,6 +395,12 @@ window.speak = (text) => {
 }
 
 window.stopSession = () => {
+  // 清除 keepalive 定時器
+  if (keepAliveInterval) {
+    clearInterval(keepAliveInterval);
+    keepAliveInterval = null;
+  }
+
   speechSynthesizer.close()
 }
 
@@ -279,8 +408,8 @@ window.startRecording = () => {
   const speechConfig = SpeechSDK.SpeechConfig.fromAuthorizationToken(token, CogSvcRegion);
   speechConfig.authorizationToken = token;
   speechConfig.SpeechServiceConnection_LanguageIdMode = "Continuous";
-  var autoDetectSourceLanguageConfig = SpeechSDK.AutoDetectSourceLanguageConfig.fromLanguages(supported_languages);
-  // var autoDetectSourceLanguageConfig = SpeechSDK.AutoDetectSourceLanguageConfig.fromLanguages(["en-US"]);
+  // var autoDetectSourceLanguageConfig = SpeechSDK.AutoDetectSourceLanguageConfig.fromLanguages(supported_languages);
+  var autoDetectSourceLanguageConfig = SpeechSDK.AutoDetectSourceLanguageConfig.fromLanguages(["zh-TW"]);
 
   document.getElementById('buttonIcon').className = "fas fa-stop"
   document.getElementById('startRecording').disabled = true
@@ -324,6 +453,23 @@ window.submitText = () => {
   window.speak(document.getElementById('textinput').currentValue);
 }
 
+// 新增函數：設定 keepalive 參數
+window.setKeepAliveParams = (intervalTime, maxAttempts) => {
+  if (intervalTime && typeof intervalTime === 'number' && intervalTime > 0) {
+    keepAliveIntervalTime = intervalTime;
+    console.log("[" + (new Date()).toISOString() + "] Keepalive interval time set to " + keepAliveIntervalTime + "ms");
+  }
+  
+  if (maxAttempts && typeof maxAttempts === 'number' && maxAttempts >= 0) {
+    maxKeepAliveAttempts = maxAttempts;
+    console.log("[" + (new Date()).toISOString() + "] Max keepalive attempts set to " + maxKeepAliveAttempts);
+  }
+  
+  // 如果 keepalive 已經在運行，重新啟動以應用新設定
+  if (keepAliveInterval) {
+    startKeepAlive();
+  }
+}
 
 function addToConversationHistory(item, historytype) {
   const list = document.getElementById('chathistory');
