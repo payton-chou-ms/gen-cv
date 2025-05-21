@@ -41,7 +41,7 @@ body {
     height: 100%;
     word-break: break-word;
     /* background-image: url("../images/pexels-ian-beckley-2440024.png"); */
-    background-image: url("../images/liteon-background.png");
+    background-image: url("../images/tsmc-background1.png");
     background-repeat: no-repeat;
     background-size: cover;
 }
@@ -52,7 +52,7 @@ body {
     height: 100%;
     top: 0;
     /* background-image: url("../images/pexels-ian-beckley-2440024.png"); */
-    background-image: url("../images/liteon-background.png");
+    background-image: url("../images/tsmc-background1.png");
     background-repeat: no-repeat;
     background-size: cover;
     
@@ -117,7 +117,7 @@ body {
 }
 
 h1 {
-    color: rgb(2, 37, 41);
+    color: rgb(255, 255, 255);
 }
 
 
@@ -527,7 +527,7 @@ input:checked+.slider:before {
 }
 
 .header {
-    color: #000000;
+    color: #ffffff;
     display: flex;
     padding: 20px;
 }
