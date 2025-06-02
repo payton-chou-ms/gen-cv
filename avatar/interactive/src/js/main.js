@@ -38,7 +38,7 @@ var peerConnection
 var previousAnimationFrameTimestamp = 0
 var keepAliveInterval = null  // 用於存儲 keepalive 計時器
 var keepAliveIntervalTime = 60000  // keepalive 時間間隔，預設 60 秒
-var maxKeepAliveAttempts = 20  // 最大 keepalive 嘗試次數，預設為 2
+var maxKeepAliveAttempts = 120  // 最大 keepalive 嘗試次數，預設為 120 次（即 2 小時）
 var keepAliveAttemptCount = 0  // 當前已執行的 keepalive 次數
 
 messages = [{ "role": "system", "content": system_prompt }];
