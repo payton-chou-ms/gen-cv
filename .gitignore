@@ -176,3 +176,5 @@ sam*.pth
 **/*.ipynb_aml_checkpoints*
 **/*amltmp
 avatar/interactive/api/.local.settings-backup.json
+avatar/interactive/api/local.settings-liteon.json
+avatar/interactive/api/local.settings.json.main
