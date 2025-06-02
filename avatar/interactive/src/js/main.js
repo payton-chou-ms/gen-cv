@@ -25,7 +25,7 @@ const TalkingAvatarCharacter = "lisa"
 const TalkingAvatarStyle = "casual-sitting"
 // const TalkingAvatarStyle = "business"
 // The language detection engine supports a maximum of 4 languages
-supported_languages = ["en-US", "zh-TW"]
+supported_languages = ["en-US", "zh-TW", "ja-JP", "ko-KR"]
 
 let token
 
